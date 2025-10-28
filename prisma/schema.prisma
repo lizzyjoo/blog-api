@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -16,7 +15,7 @@ datasource db {
 
 model User {
   id              Int       @id @default(autoincrement())
-  uername         String    @unique
+  username        String    @unique
   email           String    @unique
   first_name      String
   last_name       String
@@ -26,6 +25,7 @@ model User {
   updated_at      DateTime  @updatedAt
   posts           Post[]
   comments        Comment[]
+  Profile         Profile?
 }
 
 model Post {
@@ -36,6 +36,7 @@ model Post {
   author     User      @relation(fields: [authorId], references: [id])
   authorId   Int
   comments   Comment[]
+  viweable   Boolean   @default(true)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
 }
@@ -49,4 +50,14 @@ model Comment {
   postId     Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Profile {
+  id       Int       @id @default(autoincrement())
+  bio      String?
+  user     User      @relation(fields: [userId], references: [id])
+  userId   Int       @unique
+  website  String?
+  location String?
+  birthday DateTime?
 }
