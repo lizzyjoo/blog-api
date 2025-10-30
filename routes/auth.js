@@ -3,7 +3,7 @@
 import express from "express";
 import prisma from "../db/prisma.js";
 import jwt from "jsonwebtoken";
-
+import bcrypt from "bcrypt";
 const router = express.Router();
 
 // user registration
@@ -34,6 +34,7 @@ router.post("/register", async (req, res) => {
       .status(201)
       .json({ message: "User registered successfully", user: newUser });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Registration failed" });
   }
 });
@@ -41,8 +42,16 @@ router.post("/register", async (req, res) => {
 // user login
 router.post("/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const user = await prisma.user.findUnique({ where: { username } });
+    const { email, username, password } = req.body;
+    let user;
+    if (email) {
+      user = await prisma.user.findUnique({ where: { email } });
+    } else if (username) {
+      user = await prisma.user.findUnique({ where: { username } });
+    } else {
+      return res.status(400).json({ error: "Email or username required" });
+    }
+
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -71,6 +80,7 @@ router.post("/login", async (req, res) => {
     });
     res.json({ message: "Login successful", token });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Login failed" });
   }
 });

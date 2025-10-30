@@ -36,7 +36,7 @@ model Post {
   author     User      @relation(fields: [authorId], references: [id])
   authorId   Int
   comments   Comment[]
-  viweable   Boolean   @default(true)
+  viewable   Boolean   @default(true)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
 }

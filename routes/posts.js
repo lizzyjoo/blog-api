@@ -64,8 +64,6 @@ router.post("/", authenticateJWT, async (req, res) => {
         title,
         content,
         authorId: req.user.id, // use the ID from the authenticated user
-        created_at: new Date(created_at),
-        updated_at: new Date(updated_at),
       },
       include: {
         author: {
@@ -85,14 +83,13 @@ router.post("/", authenticateJWT, async (req, res) => {
 // Update a post: check authentication, check if the user is the author
 router.put("/:id", authenticateJWT, async (req, res) => {
   const { id } = req.params;
-  const { title, content, updated_at } = req.body;
+  const { title, content } = req.body;
   try {
     const updatedPost = await prisma.post.update({
       where: { id: Number(req.params.id) },
       data: {
         title,
         content,
-        updated_at: new Date(updated_at),
       },
     });
     res.json(updatedPost);

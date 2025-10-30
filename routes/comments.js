@@ -1,7 +1,6 @@
 import express from "express";
 import prisma from "../db/prisma.js";
 import { authenticateJWT } from "../middleware/authMiddleware.js";
-import { create } from "domain";
 
 const router = express.Router();
 // Get all comments
@@ -9,15 +8,20 @@ router.get("/", async (req, res) => {
   try {
     const comments = await prisma.comment.findMany({
       include: {
-        post: true,
-        authorId: true,
-        created_at: true,
-        updated_at: true,
+        author: { select: { id: true, username: true } },
+        post: {
+          select: { id: true, title: true }, // Include post info too
+        },
       },
+
       orderBy: { created_at: "desc" },
     });
+    if (comments.length === 0) {
+      return res.json({ message: "No comments yet." });
+    }
     res.json(comments);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch comments" });
   }
 });
@@ -29,10 +33,10 @@ router.get("/:id", async (req, res) => {
     const comment = await prisma.comment.findUnique({
       where: { id: Number(id) },
       include: {
-        post: true,
-        authorId: true,
-        created_at: true,
-        updated_at: true,
+        author: { select: { id: true, username: true } },
+        post: {
+          select: { id: true, title: true }, // Include post info too
+        },
       },
     });
     if (!comment) {
@@ -47,14 +51,12 @@ router.get("/:id", async (req, res) => {
 // Create a new comment
 router.post("/", authenticateJWT, async (req, res) => {
   try {
-    const { content, postId, authorId } = req.body;
+    const { content, postId } = req.body;
     const newComment = await prisma.comment.create({
       data: {
         content,
         postId,
         authorId: req.user.id, // use the ID from the authenticated user
-        created_at: new Date(),
-        updated_at: new Date(),
       },
       include: {
         author: {
@@ -67,6 +69,7 @@ router.post("/", authenticateJWT, async (req, res) => {
     });
     res.status(201).json(newComment);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Failed to create comment" });
   }
 });
@@ -80,7 +83,6 @@ router.put("/:id", authenticateJWT, async (req, res) => {
       where: { id: Number(id) },
       data: {
         content,
-        updated_at: new Date(),
       },
     });
     res.json(updatedComment);
@@ -92,14 +94,30 @@ router.put("/:id", authenticateJWT, async (req, res) => {
 // Delete a comment
 router.delete("/:id", authenticateJWT, async (req, res) => {
   const { id } = req.params;
+
   try {
+    // Check if comment exists and user owns it
+    const existingComment = await prisma.comment.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingComment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    if (existingComment.authorId !== req.user.id) {
+      return res
+        .status(403)
+        .json({ error: "You can only delete your own comments" });
+    }
+
     await prisma.comment.delete({
       where: { id: Number(id) },
     });
-    if (!comment) {
-      return res.status(404).json({ error: "Comment not found" });
-    }
+
+    res.status(204).end(); // 204 No Content for successful delete
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to delete comment" });
   }
 });
