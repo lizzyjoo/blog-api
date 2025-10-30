@@ -22,4 +22,13 @@ const authenticateJWT = (req, res, next) => {
   }
 };
 
-export { authenticateJWT };
+const isAdmin = (req, res, next) => {
+  // Assuming req.user is set by authenticateJWT middleware
+  if (req.user && req.user.role === "admin") {
+    next(); // User is admin, proceed
+  } else {
+    return res.status(403).json({ error: "Admin privileges required" });
+  }
+};
+
+export { authenticateJWT, isAdmin };

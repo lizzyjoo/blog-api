@@ -1,5 +1,6 @@
 import express from "express";
 import prisma from "../db/prisma.js";
+import bcrypt from "bcrypt";
 import { authenticateJWT } from "../middleware/authMiddleware.js";
 
 // Get user info, Update profile, Change password, Upload profile picture, Delete account
@@ -14,8 +15,23 @@ router.get("/:id", async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: Number(id) },
+      // only return public info
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        username: true,
+        email: true,
+        profile_picture: true,
+        created_at: true,
+      },
     });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Failed to fetch user profile" });
   }
 });
@@ -25,12 +41,32 @@ router.get("/:id/posts", async (req, res) => {
   const { id } = req.params;
   try {
     const posts = await prisma.post.findMany({
-      where: { authorId: Number(id) },
+      where: { authorId: Number(id), published: true },
       orderBy: { created_at: "desc" },
     });
     res.json(posts);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch user posts" });
+  }
+});
+
+router.get("/me", authenticateJWT, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        username: true,
+        email: true,
+        profile_picture: true,
+        created_at: true,
+      },
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user profile" });
   }
 });
 
@@ -72,4 +108,14 @@ router.put("/me/password", authenticateJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to change password" });
   }
 });
+
+router.delete("/me", authenticateJWT, async (req, res) => {
+  try {
+    await prisma.user.delete({ where: { id: req.user.id } });
+    res.json({ message: "Account deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete account" });
+  }
+});
+
 export default router;
