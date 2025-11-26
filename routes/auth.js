@@ -4,6 +4,7 @@ import express from "express";
 import prisma from "../db/prisma.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { isAdmin } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 // user registration
@@ -76,9 +77,9 @@ router.post("/login", async (req, res) => {
         first_name: user.first_name,
         last_name: user.last_name,
         profile_picture: user.profile_picture,
+        isAdmin: user.isAdmin,
       },
     });
-    res.json({ message: "Login successful", token });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Login failed" });

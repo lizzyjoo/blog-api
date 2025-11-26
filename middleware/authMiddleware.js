@@ -22,12 +22,18 @@ const authenticateJWT = (req, res, next) => {
   }
 };
 
-const isAdmin = (req, res, next) => {
-  // Assuming req.user is set by authenticateJWT middleware
-  if (req.user && req.user.role === "admin") {
-    next(); // User is admin, proceed
-  } else {
-    return res.status(403).json({ error: "Admin privileges required" });
+const isAdmin = async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { role: "admin" },
+    });
+    if (user.role !== "admin") {
+      return res.status(403).json({ error: "Admin privileges required" });
+    }
+    next();
+  } catch (error) {
+    return res.status(500).json({ error: "Server error" });
   }
 };
 

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node app.js",
-    "start": "nodemon app.js"
+    "start": "nodemon app.js",
+    "seed": "node prisma/seed.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

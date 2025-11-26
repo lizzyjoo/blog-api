@@ -102,8 +102,28 @@ router.put("/:id", authenticateJWT, async (req, res) => {
 router.delete("/:id", authenticateJWT, async (req, res) => {
   const { id } = req.params;
   try {
+    const existingPost = await prisma.post.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingPost) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { isAdmin: true },
+    });
+
+    // check if the logged-in user is the author of the post or an admin
+    if (existingPost.authorId !== req.user.id && !user.isAdmin) {
+      return res
+        .status(403)
+        .json({ error: "You are not authorized to delete this post" });
+    }
+
     await prisma.post.delete({
-      where: { id: Number(req.params.id) },
+      where: { id: Number(id) },
     });
     res.status(204).end(); // 204 means No Content
   } catch (error) {

@@ -17,12 +17,14 @@ model User {
   id              Int       @id @default(autoincrement())
   username        String    @unique
   email           String    @unique
+  role            String    @default("user")
   first_name      String
   last_name       String
   password        String
   profile_picture String?
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
+  isAdmin         Boolean   @default(false)
   posts           Post[]
   comments        Comment[]
   Profile         Profile?

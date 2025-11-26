@@ -32,6 +32,17 @@ async function main() {
     },
   });
 
+  const adminUser = await prisma.user.create({
+    data: {
+      username: "admin",
+      email: "admin@example.com",
+      first_name: "Admin",
+      last_name: "User",
+      password: await bcrypt.hash("admin123", 10),
+      isAdmin: true,
+    },
+  });
+
   const post1 = await prisma.post.create({
     data: {
       title: "Getting Started with React",

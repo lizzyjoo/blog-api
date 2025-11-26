@@ -21,7 +21,7 @@ router.get("/:id", async (req, res) => {
         first_name: true,
         last_name: true,
         username: true,
-        email: true,
+        // email: true, maybe hide email for privacy
         profile_picture: true,
         created_at: true,
       },
