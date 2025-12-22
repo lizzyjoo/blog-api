@@ -55,15 +55,14 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create a new post
 router.post("/", authenticateJWT, async (req, res) => {
   try {
-    const { title, content, authorId, created_at, updated_at } = req.body;
+    const { title, content } = req.body;
     const newPost = await prisma.post.create({
       data: {
         title,
         content,
-        authorId: req.user.id, // use the ID from the authenticated user
+        authorId: req.user.id,
       },
       include: {
         author: {
@@ -74,7 +73,7 @@ router.post("/", authenticateJWT, async (req, res) => {
         },
       },
     });
-    res.status(201).json(newPost); // 201 means created, convert post to JSON
+    res.status(201).json(newPost);
   } catch (error) {
     res.status(500).json({ error: "Failed to create post" });
   }

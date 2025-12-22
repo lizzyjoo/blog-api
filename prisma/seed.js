@@ -76,6 +76,18 @@ async function main() {
     },
   });
 
+  const post4 = await prisma.post.create({
+    data: {
+      title: "J. Brahms: Violin Sonata No. 2 in A Major, Op. 100",
+      content:
+        'In the summer of 1886, Brahms enjoyed a productive and joyful period in Thun, Switzerland, where he composed the sonata. He gave the work the formal title Sonata for Piano and Violin, emphasizing the balanced and intimate partnership between the instruments. This quality was perhaps inspired by the serene yet invigorating surroundings of Thun, which he described as "so full of melodies that one has to be careful not to step on any."The second sonata is traditionally regarded as the most lyrical out of his three violin sonatas. In the work, Brahms includes fragments of songs that he wrote for his close friend and young German contralto Hermine Spies, such as Komm bald! (“Come Soon”), Wie Melodien zieht es (“It Goes Like Melodies”), Auf dem Kirchhofe (“In the Churchyard”), Meine Lieder (“My Songs”), and Meine Liebe ist grün (“My Love Is Green”). The opening movement is in sonata form, and the piano initiates the first and second themes. From opening piano chords, the melody flows continuously between the instruments in easy conversation. The second movement combines the roles of a slow movement and scherzo in alternating sections, with violin and piano often playing in the same register—doubling, crossing, and intertwining. The finale is a rondo built on a simple rising third (A–C) on the violin, heard each time with a slightly different rhythm, as if searching for its proper metric position. These subtle metric ambiguities give the movement its sense of unhurried grace and forward momentum. Brahms’s friend Elisabeth von Herzogenberg described the sonata as “one caress,” capturing the warm and introspective nature of the work, which never strays far from its radiant and openly affectionate center.',
+      authorId: adminUser.id,
+      created_at: new Date("2023-09-01T12:00:00Z"),
+      published: true,
+      viewable: true,
+    },
+  });
+
   const comment1 = await prisma.comment.create({
     data: {
       content:

@@ -7,6 +7,54 @@ import { authenticateJWT } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+router.get("/me", authenticateJWT, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        username: true,
+        email: true,
+        profile_picture: true,
+        created_at: true,
+      },
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user profile" });
+  }
+});
+
+// private, authenticated user can update their profile
+router.put("/me", authenticateJWT, async (req, res) => {
+  const { first_name, last_name, email, profile_picture } = req.body;
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        first_name,
+        last_name,
+        email,
+        profile_picture,
+      },
+    });
+    res.json({ message: "Profile updated successfully", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
+router.delete("/me", authenticateJWT, async (req, res) => {
+  try {
+    await prisma.user.delete({ where: { id: req.user.id } });
+    res.json({ message: "Account deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete account" });
+  }
+});
+
 // public, can view any user's public profile and posts
 // might change this to authenticated only later, maybe add friendship system
 // view user profile
@@ -50,45 +98,6 @@ router.get("/:id/posts", async (req, res) => {
   }
 });
 
-router.get("/me", authenticateJWT, async (req, res) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      select: {
-        id: true,
-        first_name: true,
-        last_name: true,
-        username: true,
-        email: true,
-        profile_picture: true,
-        created_at: true,
-      },
-    });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch user profile" });
-  }
-});
-
-// private, authenticated user can update their profile
-router.put("/me", authenticateJWT, async (req, res) => {
-  const { first_name, last_name, email, profile_picture } = req.body;
-  try {
-    const updatedUser = await prisma.user.update({
-      where: { id: req.user.id },
-      data: {
-        first_name,
-        last_name,
-        email,
-        profile_picture,
-      },
-    });
-    res.json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to update profile" });
-  }
-});
-
 // changing password
 router.put("/me/password", authenticateJWT, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
@@ -108,14 +117,4 @@ router.put("/me/password", authenticateJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to change password" });
   }
 });
-
-router.delete("/me", authenticateJWT, async (req, res) => {
-  try {
-    await prisma.user.delete({ where: { id: req.user.id } });
-    res.json({ message: "Account deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete account" });
-  }
-});
-
 export default router;
