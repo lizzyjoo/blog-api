@@ -2,18 +2,15 @@
 import jwt from "jsonwebtoken";
 
 const authenticateJWT = (req, res, next) => {
-  console.log("Auth header:", req.headers.authorization);
   // Get token from Authorization header
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    console.log("No auth header");
     return res.status(401).json({ error: "No token provided" });
   }
 
   // Extract token
   const token = authHeader.split(" ")[1]; // "Bearer TOKEN"
-  console.log("Token:", token);
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET); // check if token is valid and not expired
@@ -21,7 +18,6 @@ const authenticateJWT = (req, res, next) => {
     console.log("Decoded:", decoded);
     next(); // Continue to the route
   } catch (error) {
-    console.log("JWT error:", error);
     return res.status(403).json({ error: "Invalid token" });
   }
 };

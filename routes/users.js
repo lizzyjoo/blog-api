@@ -69,7 +69,6 @@ router.delete("/me", authenticateJWT, async (req, res) => {
 // might change this to authenticated only later, maybe add friendship system
 // view user profile
 router.get("/:id", async (req, res) => {
-  console.log("is this being invoked");
   const { id } = req.params;
   try {
     const user = await prisma.user.findUnique({
