@@ -19,6 +19,16 @@ router.get("/me", authenticateJWT, async (req, res) => {
         email: true,
         profile_picture: true,
         created_at: true,
+        posts: {
+          take: 10,
+          orderBy: { created_at: "desc" },
+          include: {
+            author: {
+              select: { id: true, username: true },
+            },
+            comments: true,
+          },
+        },
       },
     });
     res.json(user);
@@ -59,6 +69,7 @@ router.delete("/me", authenticateJWT, async (req, res) => {
 // might change this to authenticated only later, maybe add friendship system
 // view user profile
 router.get("/:id", async (req, res) => {
+  console.log("is this being invoked");
   const { id } = req.params;
   try {
     const user = await prisma.user.findUnique({
@@ -69,7 +80,17 @@ router.get("/:id", async (req, res) => {
         first_name: true,
         last_name: true,
         username: true,
-        // email: true, maybe hide email for privacy
+        posts: {
+          take: 10,
+          orderBy: { created_at: "desc" },
+          include: {
+            author: {
+              select: { id: true, username: true },
+            },
+            comments: true,
+          },
+        },
+
         profile_picture: true,
         created_at: true,
       },
