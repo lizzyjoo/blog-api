@@ -11,6 +11,7 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
   try {
     // get form data
+    const registeredDate = new Date();
     const {
       first_name,
       last_name,
@@ -29,6 +30,8 @@ router.post("/register", async (req, res) => {
         email,
         password: hashedPassword,
         profile_picture, // optional, if empty will use default value
+        registeredDate,
+        subscribers,
       },
     });
     res
