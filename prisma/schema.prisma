@@ -22,12 +22,17 @@ model User {
   last_name       String
   password        String
   profile_picture String?
+  registeredDate  DateTime  @default(now())
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
   isAdmin         Boolean   @default(false)
   posts           Post[]
   comments        Comment[]
   Profile         Profile?
+  following       User[]    @relation("UserFollows")
+  subscribers     User[]    @relation("UserFollows")
+  likedPosts      Post[]    @relation("LikedBy")
+  savedPosts      Post[]    @relation("SavedBy")
 }
 
 model Post {
@@ -43,6 +48,8 @@ model Post {
   viewable   Boolean   @default(true)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
+  likedBy    User[]    @relation("LikedBy")
+  savedBy    User[]    @relation("SavedBy") // only need number of users who saved the post
 }
 
 model Comment {
