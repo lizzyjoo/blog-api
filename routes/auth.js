@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 import { isAdmin } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
-// user registration
+// user registration handle existing username/email
 router.post("/register", async (req, res) => {
   try {
     // get form data
@@ -20,6 +20,18 @@ router.post("/register", async (req, res) => {
       password,
       profile_picture,
     } = req.body; // need to hash password in production
+    // check if username or email already exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ username }, { email }],
+      },
+    });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ error: "Username or email already exists" });
+    }
+    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     // create user in db
     const newUser = await prisma.user.create({
@@ -43,26 +55,32 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// user login
+// user login via email or username (both allowed)
 router.post("/login", async (req, res) => {
   console.log("Login attempt:", req.body);
   try {
     const { email, username, password } = req.body;
+    const cleanEmail = email?.trim().toLowerCase();
+    const cleanUsername = username?.trim();
     let user;
     if (email) {
-      user = await prisma.user.findUnique({ where: { email } });
+      user = await prisma.user.findUnique({ where: { cleanEmail } });
     } else if (username) {
-      user = await prisma.user.findUnique({ where: { username } });
+      user = await prisma.user.findUnique({ where: { cleanUsername } });
     } else {
       return res.status(400).json({ error: "Email or username required" });
     }
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ error: "Username or Password is Incorrect" });
     }
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(401).json({ error: "Password is incorrect" });
+      return res
+        .status(401)
+        .json({ error: "Username or Password is Incorrect" });
     }
     // create JWT token
     const token = jwt.sign(
