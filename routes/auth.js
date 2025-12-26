@@ -60,9 +60,11 @@ router.post("/login", async (req, res) => {
     const cleanUsername = username?.trim();
     let user;
     if (email) {
-      user = await prisma.user.findUnique({ where: { cleanEmail } });
+      user = await prisma.user.findUnique({ where: { email: cleanEmail } });
     } else if (username) {
-      user = await prisma.user.findUnique({ where: { cleanUsername } });
+      user = await prisma.user.findUnique({
+        where: { username: cleanUsername },
+      });
     } else {
       return res.status(400).json({ error: "Email or username required" });
     }
