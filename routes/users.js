@@ -118,6 +118,9 @@ router.get("/:id/posts", async (req, res) => {
   }
 });
 
+// DEBUG get user saved posts
+router.get("/:id/saved", async (req, res) => {});
+
 // changing password
 router.put("/me/password", authenticateJWT, async (req, res) => {
   const { currentPassword, newPassword } = req.body;

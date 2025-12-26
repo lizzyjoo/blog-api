@@ -2,7 +2,8 @@ import express from "express";
 import jwt from "jsonwebtoken";
 const app = express();
 import cors from "cors";
-
+import dotenv from "dotenv";
+dotenv.config();
 import userRouter from "./routes/users.js";
 import postsRouter from "./routes/posts.js";
 import commentRouter from "./routes/comments.js";

@@ -9,17 +9,12 @@ const router = express.Router();
 
 // user registration handle existing username/email
 router.post("/register", async (req, res) => {
+  console.log("Registration attempt:", req.body);
+  const subscribers = 0; // default value
   try {
     // get form data
     const registeredDate = new Date();
-    const {
-      first_name,
-      last_name,
-      username,
-      email,
-      password,
-      profile_picture,
-    } = req.body; // need to hash password in production
+    const { first_name, last_name, username, email, password } = req.body; // need to hash password in production
     // check if username or email already exists
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -27,6 +22,7 @@ router.post("/register", async (req, res) => {
       },
     });
     if (existingUser) {
+      console.log("Existing user found:", existingUser);
       return res
         .status(400)
         .json({ error: "Username or email already exists" });

@@ -14,25 +14,24 @@ datasource db {
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  username        String    @unique
-  email           String    @unique
-  role            String    @default("user")
-  first_name      String
-  last_name       String
-  password        String
-  profile_picture String?
-  registeredDate  DateTime  @default(now())
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  isAdmin         Boolean   @default(false)
-  posts           Post[]
-  comments        Comment[]
-  Profile         Profile?
-  following       User[]    @relation("UserFollows")
-  subscribers     User[]    @relation("UserFollows")
-  likedPosts      Post[]    @relation("LikedBy")
-  savedPosts      Post[]    @relation("SavedBy")
+  id             Int       @id @default(autoincrement())
+  username       String    @unique
+  email          String    @unique
+  role           String    @default("user")
+  first_name     String
+  last_name      String
+  password       String
+  registeredDate DateTime  @default(now())
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  isAdmin        Boolean   @default(false)
+  posts          Post[]
+  comments       Comment[]
+  Profile        Profile?
+  following      User[]    @relation("UserFollows")
+  subscribers    User[]    @relation("UserFollows")
+  likedPosts     Post[]    @relation("LikedBy")
+  savedPosts     Post[]    @relation("SavedBy")
 }
 
 model Post {
