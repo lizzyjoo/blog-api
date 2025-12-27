@@ -1,4 +1,8 @@
 import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+dotenv.config();
+
+// rest of your seed code
 import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
@@ -49,8 +53,8 @@ async function main() {
       content:
         "React is a powerful JavaScript library for building user interfaces. In this post, we will explore the basics of React and how to get started with your first component.",
       published: true,
+      hidden: false,
       authorId: user1.id,
-      viewable: true,
     },
   });
 
@@ -61,7 +65,6 @@ async function main() {
         "The Node.js event loop is the heart of its asynchronous architecture. Let's dive deep into how it works and why it makes Node.js so powerful for I/O operations.",
       published: true,
       authorId: user2.id,
-      viewable: true,
     },
   });
 
@@ -71,7 +74,7 @@ async function main() {
       content:
         "This is a draft post about advanced TypeScript patterns. Coming soon!",
       published: false, // Explicitly set as draft
-      viewable: false, // Override default
+      hidden: false,
       authorId: user1.id,
     },
   });
@@ -84,7 +87,7 @@ async function main() {
       authorId: adminUser.id,
       created_at: new Date("2023-09-01T12:00:00Z"),
       published: true,
-      viewable: true,
+      hidden: false,
     },
   });
 
