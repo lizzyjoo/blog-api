@@ -2,7 +2,7 @@ import express from "express";
 import prisma from "../db/prisma.js";
 import { authenticateJWT } from "../middleware/authMiddleware.js";
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 // Get all comments
 router.get("/", async (req, res) => {
   try {
@@ -13,8 +13,8 @@ router.get("/", async (req, res) => {
           select: { id: true, title: true }, // Include post info too
         },
       },
-
-      orderBy: { created_at: "desc" },
+      // order by ascending
+      orderBy: { created_at: "asc" },
     });
     if (comments.length === 0) {
       return res.json({ message: "No comments yet." });
@@ -48,10 +48,12 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create a new comment
+// Create a new comment for a specific post
+
 router.post("/", authenticateJWT, async (req, res) => {
   try {
-    const { content, postId } = req.body;
+    const { content } = req.body;
+    const postId = Number(req.params.postId);
     const newComment = await prisma.comment.create({
       data: {
         content,

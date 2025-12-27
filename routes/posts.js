@@ -1,12 +1,44 @@
 import express from "express";
 import prisma from "../db/prisma.js";
-import { authenticateJWT } from "../middleware/authMiddleware.js";
+import { authenticateJWT, optionalAuth } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 // Get all posts
-router.get("/", async (req, res) => {
+router.get("/", optionalAuth, async (req, res) => {
   try {
+    const { authorId, published, drafts } = req.query;
+
+    const where = {};
+
+    // Default public feed: published and not hidden
+    if (!drafts && !authorId) {
+      where.published = true;
+      where.hidden = false;
+    }
+
+    // User requesting their own drafts
+    if (drafts === "true") {
+      if (!req.user) {
+        return res.status(401).json({ error: "Login required to view drafts" });
+      }
+      where.published = false;
+      where.authorId = req.user.id;
+    }
+
+    // Viewing a specific author's posts
+    if (authorId) {
+      where.authorId = Number(authorId);
+
+      // If viewing someone else's posts, only show published
+      if (!req.user || req.user.id !== Number(authorId)) {
+        where.published = true;
+        where.hidden = false;
+      }
+      // If viewing own posts, show all (no additional filter)
+    }
+
     const posts = await prisma.post.findMany({
+      where,
       include: {
         author: {
           select: {
@@ -19,10 +51,8 @@ router.get("/", async (req, res) => {
       orderBy: {
         created_at: "desc",
       },
-    }); // returns a list of records, fetch all posts
-    if (posts.length === 0) {
-      return res.json({ message: "No posts yet." });
-    }
+    });
+
     res.json(posts);
   } catch (error) {
     console.error(error);
@@ -76,6 +106,40 @@ router.post("/", authenticateJWT, async (req, res) => {
     res.status(201).json(newPost);
   } catch (error) {
     res.status(500).json({ error: "Failed to create post" });
+  }
+});
+
+// search posts
+router.get("/search", async (req, res) => {
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({ error: "Search query required" });
+  }
+
+  try {
+    const posts = await prisma.post.findMany({
+      where: {
+        published: true,
+        hidden: false,
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { content: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        author: {
+          select: { id: true, username: true },
+        },
+        comments: true,
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    res.json(posts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Search failed" });
   }
 });
 
