@@ -17,7 +17,6 @@ router.get("/me", authenticateJWT, async (req, res) => {
         last_name: true,
         username: true,
         email: true,
-        profile_picture: true,
         created_at: true,
         posts: {
           take: 10,
@@ -39,7 +38,7 @@ router.get("/me", authenticateJWT, async (req, res) => {
 
 // private, authenticated user can update their profile
 router.put("/me", authenticateJWT, async (req, res) => {
-  const { first_name, last_name, email, profile_picture } = req.body;
+  const { first_name, last_name, email } = req.body;
   try {
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
@@ -47,7 +46,6 @@ router.put("/me", authenticateJWT, async (req, res) => {
         first_name,
         last_name,
         email,
-        profile_picture,
       },
     });
     res.json({ message: "Profile updated successfully", user: updatedUser });
@@ -68,11 +66,11 @@ router.delete("/me", authenticateJWT, async (req, res) => {
 // public, can view any user's public profile and posts
 // might change this to authenticated only later, maybe add friendship system
 // view user profile
-router.get("/:id", async (req, res) => {
-  const { id } = req.params;
+router.get("/:username", async (req, res) => {
+  const { username } = req.params;
   try {
     const user = await prisma.user.findUnique({
-      where: { id: Number(id) },
+      where: { username },
       // only return public info
       select: {
         id: true,
@@ -89,8 +87,13 @@ router.get("/:id", async (req, res) => {
             comments: true,
           },
         },
+        _count: {
+          select: {
+            subscribers: true, // count of followers
+            following: true, // count of users they follow
+          },
+        },
 
-        profile_picture: true,
         created_at: true,
       },
     });
@@ -105,11 +108,11 @@ router.get("/:id", async (req, res) => {
 });
 
 // get user posts
-router.get("/:id/posts", async (req, res) => {
-  const { id } = req.params;
+router.get("/:username/posts", async (req, res) => {
+  const { username } = req.params;
   try {
     const posts = await prisma.post.findMany({
-      where: { authorId: Number(id), published: true },
+      where: { username, published: true, hidden: false },
       orderBy: { created_at: "desc" },
     });
     res.json(posts);
@@ -119,7 +122,87 @@ router.get("/:id/posts", async (req, res) => {
 });
 
 // DEBUG get user saved posts
-router.get("/:id/saved", async (req, res) => {});
+router.get("/:username/saved", async (req, res) => {});
+
+// Follow a user
+router.post("/:username/follow", authenticateJWT, async (req, res) => {
+  const { username } = req.params;
+  try {
+    const userToFollow = await prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (!userToFollow) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (userToFollow.id === req.user.id) {
+      return res.status(400).json({ error: "Cannot follow yourself" });
+    }
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        following: {
+          connect: { id: userToFollow.id },
+        },
+      },
+    });
+
+    res.json({ message: `Now following ${username}` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to follow user" });
+  }
+});
+
+// Unfollow a user
+router.delete("/:username/follow", authenticateJWT, async (req, res) => {
+  const { username } = req.params;
+  try {
+    const userToUnfollow = await prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (!userToUnfollow) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        following: {
+          disconnect: { id: userToUnfollow.id },
+        },
+      },
+    });
+
+    res.json({ message: `Unfollowed ${username}` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to unfollow user" });
+  }
+});
+
+// Check if following a user
+router.get("/:username/follow", authenticateJWT, async (req, res) => {
+  const { username } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        following: {
+          where: { username },
+          select: { id: true },
+        },
+      },
+    });
+
+    res.json({ isFollowing: user.following.length > 0 });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to check follow status" });
+  }
+});
 
 // changing password
 router.put("/me/password", authenticateJWT, async (req, res) => {
