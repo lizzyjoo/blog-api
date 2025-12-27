@@ -12,12 +12,13 @@ const authenticateJWT = (req, res, next) => {
   // Extract token
   const token = authHeader.split(" ")[1]; // "Bearer TOKEN"
   try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // check if token is valid and not expired
-    req.user = decoded; // Add user info to request
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
     console.log("Decoded:", decoded);
-    next(); // Continue to the route
+    next();
   } catch (error) {
+    console.log("JWT Error:", error.message); // Add this
+    console.log("Token received:", token); // And this
     return res.status(403).json({ error: "Invalid token" });
   }
 };
@@ -37,4 +38,22 @@ const isAdmin = async (req, res, next) => {
   }
 };
 
-export { authenticateJWT, isAdmin };
+// middleware/authMiddleware.js
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return next(); // No token, continue without user
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+  } catch (error) {
+    // Invalid token, continue without user
+  }
+  next();
+};
+
+export { authenticateJWT, isAdmin, optionalAuth };
