@@ -28,6 +28,7 @@ app.get("/", (req, res) => res.json({ message: "Welcome to the Blog API!" }));
 app.use("/users", userRouter);
 app.use("/auth", authRouter);
 app.use("/posts", postsRouter);
+app.use("/posts/:postId/comments", commentRouter);
 app.use("/comments", commentRouter);
 app.use("/admin", adminRouter);
 
