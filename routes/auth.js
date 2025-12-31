@@ -2,6 +2,7 @@
 
 import express from "express";
 import prisma from "../db/prisma.js";
+import passport from "../config/passport.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { isAdmin } from "../middleware/authMiddleware.js";
@@ -37,7 +38,6 @@ router.post("/register", async (req, res) => {
         username,
         email,
         password: hashedPassword,
-        profile_picture, // optional, if empty will use default value
         registeredDate,
         subscribers,
       },
@@ -83,7 +83,7 @@ router.post("/login", async (req, res) => {
     // create JWT token
     const token = jwt.sign(
       // payload and secret
-      { id: user.id, username: user.username },
+      { id: user.id, username: user.username, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
@@ -96,7 +96,6 @@ router.post("/login", async (req, res) => {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
-        profile_picture: user.profile_picture,
         isAdmin: user.isAdmin,
       },
     });
@@ -105,5 +104,61 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ error: "Login failed" });
   }
 });
+
+// GitHub OAuth
+router.get(
+  "/github",
+  passport.authenticate("github", { scope: ["user:email"] })
+);
+
+router.get(
+  "/github/callback",
+  passport.authenticate("github", {
+    session: false,
+    failureRedirect: "/login",
+  }),
+  (req, res) => {
+    // Create JWT token
+    const token = jwt.sign(
+      {
+        id: req.user.id,
+        username: req.user.username,
+        isAdmin: req.user.isAdmin,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    // Redirect to frontend with token
+    res.redirect(`http://localhost:5174/auth/callback?token=${token}`);
+  }
+);
+
+// Google OAuth
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "/login",
+  }),
+  (req, res) => {
+    const token = jwt.sign(
+      {
+        id: req.user.id,
+        username: req.user.username,
+        isAdmin: req.user.isAdmin,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    res.redirect(`http://localhost:5174/auth/callback?token=${token}`);
+  }
+);
 
 export default router;

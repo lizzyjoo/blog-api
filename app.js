@@ -4,6 +4,7 @@ const app = express();
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
+import passport from "./config/passport.js";
 import userRouter from "./routes/users.js";
 import postsRouter from "./routes/posts.js";
 import commentRouter from "./routes/comments.js";
@@ -21,6 +22,8 @@ const corsOptions = {
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+app.use(passport.initialize());
 
 // Simple route
 app.get("/", (req, res) => res.json({ message: "Welcome to the Blog API!" }));
