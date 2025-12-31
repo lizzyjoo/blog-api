@@ -2,6 +2,7 @@ import express from "express";
 import prisma from "../db/prisma.js";
 import bcrypt from "bcrypt";
 import { authenticateJWT } from "../middleware/authMiddleware.js";
+import { optionalAuth } from "../middleware/authMiddleware.js";
 
 // Get user info, Update profile, Change password, Upload profile picture, Delete account
 
@@ -36,6 +37,39 @@ router.get("/me", authenticateJWT, async (req, res) => {
   }
 });
 
+router.get("/saved", authenticateJWT, async (req, res) => {
+  const { sort } = req.query;
+
+  try {
+    const savedPosts = await prisma.savedPost.findMany({
+      where: { userId: req.user.id },
+      include: {
+        post: {
+          include: {
+            author: { select: { id: true, username: true } },
+            comments: true,
+          },
+        },
+      },
+      orderBy: { savedAt: sort === "oldest" ? "asc" : "desc" },
+    });
+
+    // Filter out trashed/hidden/unpublished and only return the posts with savedAt
+    const posts = savedPosts
+      .filter(
+        (sp) => sp.post.published && !sp.post.hidden && !sp.post.trashedAt
+      )
+      .map((sp) => ({
+        ...sp.post,
+        savedAt: sp.savedAt, // Include when it was saved
+      }));
+
+    res.json(posts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch saved posts" });
+  }
+});
 // private, authenticated user can update their profile
 router.put("/me", authenticateJWT, async (req, res) => {
   const { first_name, last_name, email } = req.body;
@@ -66,44 +100,55 @@ router.delete("/me", authenticateJWT, async (req, res) => {
 // public, can view any user's public profile and posts
 // might change this to authenticated only later, maybe add friendship system
 // view user profile
-router.get("/:username", async (req, res) => {
+// Increment profile view count
+router.get("/:username", optionalAuth, async (req, res) => {
   const { username } = req.params;
   try {
-    const user = await prisma.user.findUnique({
+    const isOwnProfile = req.user?.username === username;
+    // Increment view and get user
+    const user = await prisma.user.update({
       where: { username },
-      // only return public info
+      data: { profileViews: { increment: 1 } },
       select: {
         id: true,
+        username: true,
         first_name: true,
         last_name: true,
-        username: true,
+        profileViews: true,
+        created_at: true,
         posts: {
-          take: 10,
-          orderBy: { created_at: "desc" },
+          where: isOwnProfile
+            ? { trashedAt: null }
+            : { published: true, hidden: false, trashedAt: null },
           include: {
-            author: {
-              select: { id: true, username: true },
-            },
+            author: { select: { id: true, username: true } },
             comments: true,
           },
+          orderBy: { created_at: "desc" },
         },
         _count: {
-          select: {
-            subscribers: true, // count of followers
-            following: true, // count of users they follow
-          },
+          select: { subscribers: true, following: true },
         },
-
-        created_at: true,
       },
     });
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+
+    if (!isOwnProfile) {
+      await prisma.user.update({
+        where: { username },
+        data: {
+          profileViews: { increment: 1 },
+        },
+      });
+    }
+
     res.json(user);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Failed to fetch user profile" });
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch user" });
   }
 });
 
@@ -120,9 +165,6 @@ router.get("/:username/posts", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user posts" });
   }
 });
-
-// DEBUG get user saved posts
-router.get("/:username/saved", async (req, res) => {});
 
 // Follow a user
 router.post("/:username/follow", authenticateJWT, async (req, res) => {
