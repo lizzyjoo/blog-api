@@ -16,6 +16,7 @@ router.get("/me", authenticateJWT, async (req, res) => {
         id: true,
         first_name: true,
         last_name: true,
+        registeredDate: true,
         username: true,
         email: true,
         created_at: true,
@@ -114,6 +115,7 @@ router.get("/:username", optionalAuth, async (req, res) => {
         username: true,
         first_name: true,
         last_name: true,
+        registeredDate: true,
         profileViews: true,
         created_at: true,
         posts: {
