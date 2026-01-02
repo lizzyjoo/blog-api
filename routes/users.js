@@ -102,7 +102,7 @@ router.delete("/me", authenticateJWT, async (req, res) => {
 // might change this to authenticated only later, maybe add friendship system
 // view user profile
 // Increment profile view count
-router.get("/:username", optionalAuth, async (req, res) => {
+router.get("/profile/:username", optionalAuth, async (req, res) => {
   const { username } = req.params;
   try {
     const isOwnProfile = req.user?.username === username;

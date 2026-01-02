@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   // clear existing data
+  await prisma.savedPost.deleteMany();
   await prisma.comment.deleteMany();
   await prisma.post.deleteMany();
   await prisma.user.deleteMany();
@@ -21,6 +22,7 @@ async function main() {
       first_name: "David",
       last_name: "Smith",
       password: await bcrypt.hash("password123", 10),
+      registeredDate: new Date(),
     },
   });
 
@@ -33,6 +35,7 @@ async function main() {
       first_name: "Jane",
       last_name: "Doe",
       password: await bcrypt.hash("password123", 10),
+      registeredDate: new Date(),
     },
   });
 
@@ -44,6 +47,7 @@ async function main() {
       last_name: "User",
       password: await bcrypt.hash("admin123", 10),
       isAdmin: true,
+      registeredDate: new Date(),
     },
   });
 
