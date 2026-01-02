@@ -238,14 +238,36 @@ router.put("/:id", authenticateJWT, async (req, res) => {
 
 //increment view count
 // Increment view count (call this when post is viewed)
+// change to incrementing only per unique user
 router.post("/:id/view", async (req, res) => {
   const { id } = req.params;
   try {
-    const post = await prisma.post.update({
-      where: { id: Number(id) },
-      data: { views: { increment: 1 } },
-    });
-    res.json({ views: post.views });
+    // if user is logged in, see if they have alr viewed
+    if (req.user) {
+      const existingView = await prisma.postView.findUnique({
+        where: {
+          userId_postId: {
+            userId: req.user.id,
+            postId: Number(id),
+          },
+        },
+      });
+
+      if (existingView) {
+        // just return view count without incrementing
+        const post = await prisma.post.findUnique({
+          where: { id: Number(id) },
+          select: { views: true },
+        });
+        return res.json({ views: post.views, alreadyViewed: true });
+      }
+      const post = await prisma.post.update({
+        where: { id: Number(id) },
+        data: { views: { increment: 1 } },
+      });
+
+      res.json({ views: post.views, alreadyViewed: false });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to update view count" });
