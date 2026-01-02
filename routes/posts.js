@@ -236,9 +236,7 @@ router.put("/:id", authenticateJWT, async (req, res) => {
   }
 });
 
-//increment view count
-// Increment view count (call this when post is viewed)
-// change to incrementing only per unique user
+// increment view count
 router.post("/:id/view", async (req, res) => {
   const { id } = req.params;
   try {
