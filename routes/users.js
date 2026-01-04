@@ -109,15 +109,6 @@ router.put("/me", authenticateJWT, async (req, res) => {
   }
 });
 
-router.delete("/me", authenticateJWT, async (req, res) => {
-  try {
-    await prisma.user.delete({ where: { id: req.user.id } });
-    res.json({ message: "Account deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete account" });
-  }
-});
-
 // public, can view any user's public profile and posts
 // might change this to authenticated only later, maybe add friendship system
 // view user profile
@@ -283,26 +274,6 @@ router.get("/:username/follow", authenticateJWT, async (req, res) => {
     res.json({ isFollowing: user.following.length > 0 });
   } catch (error) {
     res.status(500).json({ error: "Failed to check follow status" });
-  }
-});
-
-// changing password
-router.put("/me/password", authenticateJWT, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!passwordMatch) {
-      return res.status(401).json({ error: "Current password is incorrect" });
-    }
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({
-      where: { id: req.user.id },
-      data: { password: hashedNewPassword },
-    });
-    res.json({ message: "Password changed successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to change password" });
   }
 });
 
