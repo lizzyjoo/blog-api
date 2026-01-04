@@ -30,6 +30,25 @@ router.get("/me", authenticateJWT, async (req, res) => {
             comments: true,
           },
         },
+        following: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
+        subscribers: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
+        _count: {
+          select: { subscribers: true, following: true },
+        },
       },
     });
     res.json(user);
@@ -71,6 +90,7 @@ router.get("/saved", authenticateJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch saved posts" });
   }
 });
+
 // private, authenticated user can update their profile
 router.put("/me", authenticateJWT, async (req, res) => {
   const { first_name, last_name, email } = req.body;
@@ -102,7 +122,7 @@ router.delete("/me", authenticateJWT, async (req, res) => {
 // might change this to authenticated only later, maybe add friendship system
 // view user profile
 // Increment profile view count
-router.get("/profile/:username", optionalAuth, async (req, res) => {
+router.get("/:username/profile", optionalAuth, async (req, res) => {
   const { username } = req.params;
   try {
     const isOwnProfile = req.user?.username === username;
@@ -127,6 +147,22 @@ router.get("/profile/:username", optionalAuth, async (req, res) => {
             comments: true,
           },
           orderBy: { created_at: "desc" },
+        },
+        following: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
+        subscribers: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+          },
         },
         _count: {
           select: { subscribers: true, following: true },
@@ -167,6 +203,8 @@ router.get("/:username/posts", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user posts" });
   }
 });
+
+router.get("/:username/subscribed", async (req, res) => {});
 
 // Follow a user
 router.post("/:username/follow", authenticateJWT, async (req, res) => {
@@ -267,4 +305,5 @@ router.put("/me/password", authenticateJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to change password" });
   }
 });
+
 export default router;
