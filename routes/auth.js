@@ -83,7 +83,16 @@ router.post("/login", async (req, res) => {
     // create JWT token
     const token = jwt.sign(
       // payload and secret
-      { id: user.id, username: user.username, isAdmin: user.isAdmin },
+      {
+        id: user.id,
+        username: user.username,
+        isAdmin: user.isAdmin,
+        authMethod: user.googleId
+          ? "google"
+          : user.githubId
+          ? "github"
+          : "local",
+      },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
@@ -124,6 +133,11 @@ router.get(
         id: req.user.id,
         username: req.user.username,
         isAdmin: req.user.isAdmin,
+        authMethod: user.googleId
+          ? "google"
+          : user.githubId
+          ? "github"
+          : "local",
       },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
@@ -152,6 +166,11 @@ router.get(
         id: req.user.id,
         username: req.user.username,
         isAdmin: req.user.isAdmin,
+        authMethod: user.googleId
+          ? "google"
+          : user.githubId
+          ? "github"
+          : "local",
       },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
