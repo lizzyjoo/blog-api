@@ -8,6 +8,13 @@ import bcrypt from "bcrypt";
 import { isAdmin } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
+function isValidUsername(username) {
+  // Alphanumeric, underscore, dot, exclamation allowed
+  // No spaces, 1-15 characters
+  const regex = /^[a-zA-Z0-9_.!]{1,15}$/;
+  return regex.test(username);
+}
+
 // user registration handle existing username/email
 router.post("/register", async (req, res) => {
   console.log("Registration attempt:", req.body);
@@ -16,6 +23,19 @@ router.post("/register", async (req, res) => {
     // get form data
     const registeredDate = new Date();
     const { first_name, last_name, username, email, password } = req.body; // need to hash password in production
+    // Validate username format
+    if (!isValidUsername(username)) {
+      return res.status(400).json({
+        error:
+          "Username must be 1-15 characters and contain only letters, numbers, _, ., or !",
+      });
+    }
+
+    if (!password || password.length < 8) {
+      return res.status(400).json({
+        error: "Password must be at least 8 characters",
+      });
+    }
     // check if username or email already exists
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -87,7 +107,7 @@ router.post("/login", async (req, res) => {
         id: user.id,
         username: user.username,
         isAdmin: user.isAdmin,
-        authMethod: user.googleId
+        authMethod: req.user.googleId
           ? "google"
           : user.githubId
           ? "github"
@@ -133,7 +153,7 @@ router.get(
         id: req.user.id,
         username: req.user.username,
         isAdmin: req.user.isAdmin,
-        authMethod: user.googleId
+        authMethod: req.user.googleId
           ? "google"
           : user.githubId
           ? "github"
@@ -166,7 +186,7 @@ router.get(
         id: req.user.id,
         username: req.user.username,
         isAdmin: req.user.isAdmin,
-        authMethod: user.googleId
+        authMethod: req.user.googleId
           ? "google"
           : user.githubId
           ? "github"
