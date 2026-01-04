@@ -38,7 +38,7 @@ const isAdmin = async (req, res, next) => {
   }
 };
 
-// middleware/authMiddleware.js
+// return token only if user is signed in
 const optionalAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
