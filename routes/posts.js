@@ -481,6 +481,9 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
         .status(403)
         .json({ error: "You are not authorized to delete this post" });
     }
+    await prisma.savedPost.deleteMany({ where: { postId } });
+    await prisma.postView.deleteMany({ where: { postId } });
+    await prisma.comment.deleteMany({ where: { postId } });
 
     await prisma.post.delete({
       where: { id: Number(id) },
