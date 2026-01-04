@@ -180,6 +180,18 @@ router.get("/:id", async (req, res) => {
 router.post("/", authenticateJWT, async (req, res) => {
   try {
     const { title, content } = req.body;
+    // Add validation
+    if (!title || title.trim() === "") {
+      return res.status(400).json({ error: "Title is required" });
+    }
+    if (!content || content.trim() === "") {
+      return res.status(400).json({ error: "Content is required" });
+    }
+    if (title.length > 50) {
+      return res
+        .status(400)
+        .json({ error: "Title must be under 200 characters" });
+    }
     const newPost = await prisma.post.create({
       data: {
         title,
