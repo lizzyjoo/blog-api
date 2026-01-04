@@ -190,7 +190,7 @@ router.post("/", authenticateJWT, async (req, res) => {
     if (title.length > 50) {
       return res
         .status(400)
-        .json({ error: "Title must be under 200 characters" });
+        .json({ error: "Title must be under 50 characters" });
     }
     const newPost = await prisma.post.create({
       data: {
@@ -461,6 +461,7 @@ router.get("/:id/status", authenticateJWT, async (req, res) => {
 // delete a post: user must be logged in and be the author
 router.delete("/:id", authenticateJWT, async (req, res) => {
   const { id } = req.params;
+  const postId = Number(id);
   try {
     const existingPost = await prisma.post.findUnique({
       where: { id: Number(id) },
