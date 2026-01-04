@@ -32,6 +32,7 @@ router.put("/password", authenticateJWT, async (req, res) => {
 });
 
 router.delete("/account/delete", authenticateJWT, async (req, res) => {
+  console.log("working?");
   try {
     const userId = req.user.id;
 
@@ -48,3 +49,5 @@ router.delete("/account/delete", authenticateJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to delete account" });
   }
 });
+
+export default router;
