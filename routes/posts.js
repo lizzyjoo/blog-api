@@ -82,6 +82,42 @@ router.get("/", optionalAuth, async (req, res) => {
   }
 });
 
+router.get("/subscribed", authenticateJWT, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        following: {
+          include: {
+            posts: {
+              where: {
+                published: true,
+                hidden: false,
+                trashedAt: null,
+              },
+              include: {
+                author: { select: { id: true, username: true } },
+                comments: true,
+              },
+              orderBy: { created_at: "desc" },
+            },
+          },
+        },
+      },
+    });
+
+    // Flatten: each followed user has posts, combine them all
+    const posts = user.following
+      .flatMap((followedUser) => followedUser.posts)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.json(posts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch subscribed posts" });
+  }
+});
+
 // search posts
 router.get("/search", async (req, res) => {
   const { q } = req.query;
