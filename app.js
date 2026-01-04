@@ -10,6 +10,7 @@ import postsRouter from "./routes/posts.js";
 import commentRouter from "./routes/comments.js";
 import adminRouter from "./routes/admin.js";
 import authRouter from "./routes/auth.js";
+import settingsRouter from "./routes/settings.js";
 
 // Development: allow all origins
 app.use(cors());
@@ -34,7 +35,7 @@ app.use("/posts", postsRouter);
 app.use("/posts/:postId/comments", commentRouter);
 app.use("/comments", commentRouter);
 app.use("/admin", adminRouter);
-app.use("/settings", adminRouter);
+app.use("/settings", settingsRouter);
 
 // Start the server
 
