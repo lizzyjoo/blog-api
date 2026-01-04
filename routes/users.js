@@ -117,10 +117,18 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
   const { username } = req.params;
   try {
     const isOwnProfile = req.user?.username === username;
-    // Increment view and get user
-    const user = await prisma.user.update({
+    // Check if user exists
+    const userCheck = await prisma.user.findUnique({
       where: { username },
-      data: { profileViews: { increment: 1 } },
+      select: { id: true },
+    });
+
+    if (!userCheck) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { username },
       select: {
         id: true,
         username: true,
@@ -138,6 +146,7 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
             comments: true,
           },
           orderBy: { created_at: "desc" },
+          take: 3, // Only fetch 3 posts
         },
         following: {
           select: {
@@ -156,7 +165,7 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
           },
         },
         _count: {
-          select: { subscribers: true, following: true },
+          select: { subscribers: true, following: true, posts: true },
         },
       },
     });
@@ -165,12 +174,11 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    // Only increment views for other users
     if (!isOwnProfile) {
       await prisma.user.update({
         where: { username },
-        data: {
-          profileViews: { increment: 1 },
-        },
+        data: { profileViews: { increment: 1 } },
       });
     }
 
@@ -180,7 +188,6 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user" });
   }
 });
-
 // get user posts
 router.get("/:username/posts", async (req, res) => {
   const { username } = req.params;
@@ -274,6 +281,79 @@ router.get("/:username/follow", authenticateJWT, async (req, res) => {
     res.json({ isFollowing: user.following.length > 0 });
   } catch (error) {
     res.status(500).json({ error: "Failed to check follow status" });
+  }
+});
+
+router.get("/:username", optionalAuth, async (req, res) => {
+  const { username } = req.params;
+  try {
+    const isOwnProfile = req.user?.username === username;
+
+    // Check if user exists
+    const userCheck = await prisma.user.findUnique({
+      where: { username },
+      select: { id: true },
+    });
+
+    if (!userCheck) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Get user data (without incrementing)
+    const user = await prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        first_name: true,
+        last_name: true,
+        registeredDate: true,
+        profileViews: true,
+        created_at: true,
+        posts: {
+          where: isOwnProfile
+            ? { trashedAt: null }
+            : { published: true, hidden: false, trashedAt: null },
+          include: {
+            author: { select: { id: true, username: true } },
+            comments: true,
+          },
+          orderBy: { created_at: "desc" },
+        },
+        following: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
+        subscribers: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
+        _count: {
+          select: { subscribers: true, following: true },
+        },
+      },
+    });
+
+    // Increment view count only for other users
+    if (!isOwnProfile) {
+      await prisma.user.update({
+        where: { username },
+        data: { profileViews: { increment: 1 } },
+      });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch user" });
   }
 });
 
