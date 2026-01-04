@@ -34,6 +34,7 @@ app.use("/posts", postsRouter);
 app.use("/posts/:postId/comments", commentRouter);
 app.use("/comments", commentRouter);
 app.use("/admin", adminRouter);
+app.use("/settings", adminRouter);
 
 // Start the server
 
