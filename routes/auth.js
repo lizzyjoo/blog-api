@@ -107,7 +107,7 @@ router.post("/login", async (req, res) => {
         id: user.id,
         username: user.username,
         isAdmin: user.isAdmin,
-        authMethod: req.user.googleId
+        authMethod: user.googleId
           ? "google"
           : user.githubId
           ? "github"
@@ -153,11 +153,7 @@ router.get(
         id: req.user.id,
         username: req.user.username,
         isAdmin: req.user.isAdmin,
-        authMethod: req.user.googleId
-          ? "google"
-          : user.githubId
-          ? "github"
-          : "local",
+        authMethod: "github",
       },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
@@ -186,16 +182,11 @@ router.get(
         id: req.user.id,
         username: req.user.username,
         isAdmin: req.user.isAdmin,
-        authMethod: req.user.googleId
-          ? "google"
-          : user.githubId
-          ? "github"
-          : "local",
+        authMethod: "google",
       },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
-
     res.redirect(`http://localhost:5174/auth/callback?token=${token}`);
   }
 );
