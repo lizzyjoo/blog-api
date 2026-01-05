@@ -18,7 +18,6 @@ function isValidUsername(username) {
 // user registration handle existing username/email
 router.post("/register", async (req, res) => {
   console.log("Registration attempt:", req.body);
-  const subscribers = 0; // default value
   try {
     // get form data
     const registeredDate = new Date();
