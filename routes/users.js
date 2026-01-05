@@ -117,7 +117,7 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
   const { username } = req.params;
   try {
     const isOwnProfile = req.user?.username === username;
-    // Check if user exists
+
     const userCheck = await prisma.user.findUnique({
       where: { username },
       select: { id: true },
@@ -126,6 +126,10 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
     if (!userCheck) {
       return res.status(404).json({ error: "User not found" });
     }
+
+    const postFilter = isOwnProfile
+      ? { trashedAt: null }
+      : { published: true, hidden: false, trashedAt: null };
 
     const user = await prisma.user.findUnique({
       where: { username },
@@ -138,15 +142,13 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
         profileViews: true,
         created_at: true,
         posts: {
-          where: isOwnProfile
-            ? { trashedAt: null }
-            : { published: true, hidden: false, trashedAt: null },
+          where: postFilter,
           include: {
             author: { select: { id: true, username: true } },
             comments: true,
           },
           orderBy: { created_at: "desc" },
-          take: 3, // Only fetch 3 posts
+          take: 3,
         },
         following: {
           select: {
@@ -165,16 +167,15 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
           },
         },
         _count: {
-          select: { subscribers: true, following: true, posts: true },
+          select: {
+            subscribers: true,
+            following: true,
+            posts: { where: postFilter }, // Same filter for count
+          },
         },
       },
     });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Only increment views for other users
     if (!isOwnProfile) {
       await prisma.user.update({
         where: { username },
@@ -188,6 +189,7 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user" });
   }
 });
+
 // get user posts
 router.get("/:username/posts", async (req, res) => {
   const { username } = req.params;
