@@ -148,7 +148,7 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
             comments: true,
           },
           orderBy: { created_at: "desc" },
-          take: 3,
+          take: 1,
         },
         following: {
           select: {
