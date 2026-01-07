@@ -283,13 +283,12 @@ router.put("/:id", authenticateJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to update post" });
   }
 });
-
 // increment view count
-router.post("/:id/view", async (req, res) => {
+router.post("/:id/view", optionalAuth, async (req, res) => {
   const { id } = req.params;
   try {
-    // if user is logged in, see if they have alr viewed
     if (req.user) {
+      // logged in user: check if already viewed
       const existingView = await prisma.postView.findUnique({
         where: {
           userId_postId: {
@@ -307,12 +306,29 @@ router.post("/:id/view", async (req, res) => {
         });
         return res.json({ views: post.views, alreadyViewed: true });
       }
+
+      // record view for logged-in user
+      await prisma.postView.create({
+        data: {
+          userId: req.user.id,
+          postId: Number(id),
+        },
+      });
+
       const post = await prisma.post.update({
         where: { id: Number(id) },
         data: { views: { increment: 1 } },
       });
 
-      res.json({ views: post.views, alreadyViewed: false });
+      return res.json({ views: post.views, alreadyViewed: false });
+    } else {
+      // anonymous (not logged in) user , just increment view count
+      const post = await prisma.post.update({
+        where: { id: Number(id) },
+        data: { views: { increment: 1 } },
+      });
+
+      return res.json({ views: post.views, alreadyViewed: false });
     }
   } catch (error) {
     console.error(error);
