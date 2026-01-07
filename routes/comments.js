@@ -16,10 +16,11 @@ router.get("/", async (req, res) => {
       // order by ascending
       orderBy: { created_at: "asc" },
     });
+
     if (comments.length === 0) {
       return res.json({ message: "No comments yet." });
     }
-    res.json(comments);
+    return res.json(comments);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch comments" });
@@ -80,25 +81,46 @@ router.post("/", authenticateJWT, async (req, res) => {
 router.put("/:id", authenticateJWT, async (req, res) => {
   const { id } = req.params;
   const { content } = req.body;
+
   try {
+    const comment = await prisma.comment.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    // Check if user is comment author or admin
+    if (comment.authorId !== req.user.id && !req.user.isAdmin) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    if (!content || content.trim() === "") {
+      return res.status(400).json({ error: "Content is required" });
+    }
+
     const updatedComment = await prisma.comment.update({
       where: { id: Number(id) },
-      data: {
-        content,
+      data: { content },
+      include: {
+        author: {
+          select: { id: true, username: true },
+        },
       },
     });
+
     res.json(updatedComment);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to update comment" });
   }
 });
-
 // Delete a comment
 router.delete("/:id", authenticateJWT, async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Check if comment exists and user owns it
     const existingComment = await prisma.comment.findUnique({
       where: { id: Number(id) },
     });
@@ -107,17 +129,16 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
       return res.status(404).json({ error: "Comment not found" });
     }
 
-    if (existingComment.authorId !== req.user.id) {
-      return res
-        .status(403)
-        .json({ error: "You can only delete your own comments" });
+    // Allow comment author OR admin to delete
+    if (existingComment.authorId !== req.user.id && !req.user.isAdmin) {
+      return res.status(403).json({ error: "Not authorized" });
     }
 
     await prisma.comment.delete({
       where: { id: Number(id) },
     });
 
-    res.status(204).end(); // 204 No Content for successful delete
+    res.status(204).end();
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to delete comment" });
