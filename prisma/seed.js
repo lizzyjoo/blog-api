@@ -72,8 +72,8 @@ async function main() {
       `.trim(),
       published: true,
       authorId: lizzy.id,
-      createdAt: new Date("2025-12-10"),
-      updatedAt: new Date("2025-12-10"),
+      created_at: new Date("2025-12-10"),
+      updated_at: new Date("2025-12-10"),
     },
   });
 
@@ -108,8 +108,8 @@ async function main() {
       `.trim(),
       published: true,
       authorId: reviewer.id,
-      createdAt: new Date("2025-12-13"),
-      updatedAt: new Date("2025-12-13"),
+      created_at: new Date("2025-12-13"),
+      updated_at: new Date("2025-12-13"),
     },
   });
 
@@ -156,8 +156,8 @@ async function main() {
       `.trim(),
       published: true,
       authorId: lizzy.id,
-      createdAt: new Date("2025-12-20"),
-      updatedAt: new Date("2025-12-20"),
+      created_at: new Date("2025-12-20"),
+      updated_at: new Date("2025-12-20"),
     },
   });
 
@@ -205,8 +205,8 @@ async function main() {
       `.trim(),
       published: true,
       authorId: lizzy.id,
-      createdAt: new Date("2025-12-28"),
-      updatedAt: new Date("2025-12-28"),
+      created_at: new Date("2025-12-28"),
+      updated_at: new Date("2025-12-28"),
     },
   });
 
