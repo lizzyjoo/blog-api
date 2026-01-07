@@ -5,6 +5,8 @@ import prisma from "../db/prisma.js";
 import passport from "../config/passport.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { sendPasswordResetEmail } from "../utils/email.js";
 import { isAdmin } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
@@ -188,5 +190,102 @@ router.get(
     res.redirect(`http://localhost:5174/auth/callback?token=${token}`);
   }
 );
+
+// password reset routs
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Don't reveal if email exists or not (security)
+    if (!user) {
+      return res.json({
+        message:
+          "If an account with that email exists, you will receive a reset link.",
+      });
+    }
+
+    // Check if user signed up via OAuth (no password to reset)
+    if (user.googleId || user.githubId || !user.password) {
+      return res.json({
+        message:
+          "If an account with that email exists, you will receive a reset link.",
+      });
+    }
+
+    // generate token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // expires in 10 min
+
+    // delete any existing reset tokens for this user
+    await prisma.passwordReset.deleteMany({ where: { userId: user.id } });
+
+    // make new reset token
+    await prisma.passwordReset.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt,
+      },
+    });
+
+    // Send email
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    await sendPasswordResetEmail(email, resetLink);
+
+    res.json({
+      message:
+        "If an account with that email exists, you will receive a reset link..",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to process request" });
+  }
+});
+
+// Reset password with token
+router.post("/reset-password", async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    // Find valid token
+    const resetRecord = await prisma.passwordReset.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!resetRecord) {
+      return res.status(400).json({ error: "Invalid or expired reset link" });
+    }
+
+    // Check if expired
+    if (resetRecord.expiresAt < new Date()) {
+      await prisma.passwordReset.delete({ where: { id: resetRecord.id } });
+      return res.status(400).json({ error: "Reset link has expired" });
+    }
+
+    // Validate password
+    if (!newPassword || newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 8 characters" });
+    }
+
+    // Hash and update password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: resetRecord.userId },
+      data: { password: hashedPassword },
+    });
+
+    // Delete the used token
+    await prisma.passwordReset.delete({ where: { id: resetRecord.id } });
+
+    res.json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to reset password" });
+  }
+});
 
 export default router;
