@@ -71,6 +71,7 @@ async function main() {
 <p>Brahms's friend Elisabeth von Herzogenberg described the sonata as "one caress," capturing the warm and introspective nature of the work, which never strays far from its radiant and openly affectionate center.</p>
       `.trim(),
       published: true,
+      hidden: false,
       authorId: lizzy.id,
       created_at: new Date("2025-12-10"),
       updated_at: new Date("2025-12-10"),
@@ -107,6 +108,7 @@ async function main() {
 <p><em>The reviewer would like to clarify that they are, in fact, the violinist, and this entire review is a cry for help.</em></p>
       `.trim(),
       published: true,
+      hidden: false,
       authorId: reviewer.id,
       created_at: new Date("2025-12-13"),
       updated_at: new Date("2025-12-13"),
@@ -155,6 +157,7 @@ async function main() {
 <p>Some things never change. That's the whole point.</p>
       `.trim(),
       published: true,
+      hidden: false,
       authorId: lizzy.id,
       created_at: new Date("2025-12-20"),
       updated_at: new Date("2025-12-20"),
@@ -205,6 +208,7 @@ async function main() {
       `.trim(),
       published: true,
       authorId: lizzy.id,
+      hidden: false,
       created_at: new Date("2025-12-28"),
       updated_at: new Date("2025-12-28"),
     },
