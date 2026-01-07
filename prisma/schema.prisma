@@ -14,28 +14,29 @@ datasource db {
 }
 
 model User {
-  id             Int         @id @default(autoincrement())
-  username       String      @unique
-  email          String      @unique
-  role           String      @default("user")
+  id             Int             @id @default(autoincrement())
+  username       String          @unique
+  email          String          @unique
+  role           String          @default("user")
   first_name     String
   last_name      String?
   password       String?
-  githubId       String?     @unique
-  googleId       String?     @unique
-  registeredDate DateTime    @default(now())
-  created_at     DateTime    @default(now())
-  updated_at     DateTime    @updatedAt
-  profileViews   Int         @default(0)
-  isAdmin        Boolean     @default(false)
+  githubId       String?         @unique
+  googleId       String?         @unique
+  registeredDate DateTime        @default(now())
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+  profileViews   Int             @default(0)
+  isAdmin        Boolean         @default(false)
   posts          Post[]
   comments       Comment[]
   Profile        Profile?
-  following      User[]      @relation("UserFollows")
-  subscribers    User[]      @relation("UserFollows")
-  likedPosts     Post[]      @relation("LikedBy")
+  following      User[]          @relation("UserFollows")
+  subscribers    User[]          @relation("UserFollows")
+  likedPosts     Post[]          @relation("LikedBy")
   savedPosts     SavedPost[]
   postViews      PostView[]
+  passwordResets PasswordReset[]
 }
 
 model Post {
@@ -98,4 +99,12 @@ model Profile {
   website  String?
   location String?
   birthday DateTime?
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id])
 }
