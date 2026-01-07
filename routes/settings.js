@@ -32,15 +32,27 @@ router.put("/password", authenticateJWT, async (req, res) => {
 });
 
 router.delete("/account/delete", authenticateJWT, async (req, res) => {
-  console.log("working?");
   try {
     const userId = req.user.id;
 
     // Delete in order (children before parent)
+    await prisma.passwordReset.deleteMany({ where: { userId } }); // Add this
     await prisma.savedPost.deleteMany({ where: { userId } });
     await prisma.postView.deleteMany({ where: { userId } });
     await prisma.comment.deleteMany({ where: { authorId: userId } });
+
+    // Delete posts and their related records
+    const userPosts = await prisma.post.findMany({
+      where: { authorId: userId },
+      select: { id: true },
+    });
+    const postIds = userPosts.map((p) => p.id);
+
+    await prisma.savedPost.deleteMany({ where: { postId: { in: postIds } } });
+    await prisma.postView.deleteMany({ where: { postId: { in: postIds } } });
+    await prisma.comment.deleteMany({ where: { postId: { in: postIds } } });
     await prisma.post.deleteMany({ where: { authorId: userId } });
+
     await prisma.user.delete({ where: { id: userId } });
 
     res.json({ message: "Account deleted successfully" });

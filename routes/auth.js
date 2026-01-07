@@ -160,7 +160,7 @@ router.get(
     );
 
     // Redirect to frontend with token
-    res.redirect(`http://localhost:5174/auth/callback?token=${token}`);
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
   }
 );
 
@@ -187,7 +187,7 @@ router.get(
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
-    res.redirect(`http://localhost:5174/auth/callback?token=${token}`);
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
   }
 );
 
