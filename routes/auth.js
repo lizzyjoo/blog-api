@@ -19,7 +19,6 @@ function isValidUsername(username) {
 
 // user registration handle existing username/email
 router.post("/register", async (req, res) => {
-  console.log("Registration attempt:", req.body);
   try {
     // get form data
     const registeredDate = new Date();
@@ -44,7 +43,6 @@ router.post("/register", async (req, res) => {
       },
     });
     if (existingUser) {
-      console.log("Existing user found:", existingUser);
       return res
         .status(400)
         .json({ error: "Username or email already exists" });
