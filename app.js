@@ -1,10 +1,13 @@
+console.log("=== APP.JS STARTING ===");
 import express from "express";
 import jwt from "jsonwebtoken";
 const app = express();
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
+console.log("=== CORE IMPORTS DONE ===");
 import passport from "./config/passport.js";
+console.log("=== PASSPORT IMPORTED ===");
 import userRouter from "./routes/users.js";
 import postsRouter from "./routes/posts.js";
 import commentRouter from "./routes/comments.js";
@@ -12,6 +15,7 @@ import adminRouter from "./routes/admin.js";
 import authRouter from "./routes/auth.js";
 import omrRoutes from "./routes/omr.js";
 import settingsRouter from "./routes/settings.js";
+console.log("=== ALL ROUTES IMPORTED ===");
 
 // Development: allow all origins
 app.use(cors({ origin: true, credentials: true }));
