@@ -28,4 +28,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && echo '=== MIGRATION DONE, STARTING NODE ===' && node app.js"]
+CMD ["node", "-e", "console.log('NODE WORKS'); require('./app.js')"]
