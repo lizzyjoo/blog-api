@@ -1,5 +1,5 @@
 FROM node:20-slim
-# cache
+
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
 
@@ -28,5 +28,4 @@ COPY . .
 
 EXPOSE 3000
 
-# Run migrations then start
-CMD ["node", "app.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && echo '=== MIGRATION DONE, STARTING NODE ===' && node app.js"]
