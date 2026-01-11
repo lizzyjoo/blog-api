@@ -49,7 +49,7 @@ model Post {
   comments   Comment[]
   likes      Int         @default(0)
   views      Int         @default(0)
-  hidden     Boolean     @default(true) // admin can hide posts
+  hidden     Boolean     @default(false) // admin can hide posts
   trashedAt  DateTime? // null = not trashed, has value = trashed at this time
   created_at DateTime    @default(now())
   updated_at DateTime    @updatedAt
