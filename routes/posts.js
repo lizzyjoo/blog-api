@@ -197,6 +197,7 @@ router.post("/", authenticateJWT, async (req, res) => {
         title,
         content,
         authorId: req.user.id,
+        hidden: false,
       },
       include: {
         author: {
