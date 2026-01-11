@@ -10,10 +10,11 @@ import postsRouter from "./routes/posts.js";
 import commentRouter from "./routes/comments.js";
 import adminRouter from "./routes/admin.js";
 import authRouter from "./routes/auth.js";
+import omrRoutes from "./routes/omr.js";
 import settingsRouter from "./routes/settings.js";
 
 // Development: allow all origins
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 
 // Production: restrict to specific origins
 const corsOptions = {
@@ -22,7 +23,8 @@ const corsOptions = {
 // app.use(cors(corsOptions));
 
 // Middleware to parse JSON bodies
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 app.use(passport.initialize());
 
@@ -36,6 +38,7 @@ app.use("/posts/:postId/comments", commentRouter);
 app.use("/comments", commentRouter);
 app.use("/admin", adminRouter);
 app.use("/settings", settingsRouter);
+app.use("/api/omr", omrRoutes);
 
 // Start the server
 
