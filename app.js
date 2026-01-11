@@ -42,7 +42,7 @@ app.use("/api/omr", omrRoutes);
 
 // Start the server
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, (error) => {
   // This is important!
   // Without this, any startup errors will silently fail
