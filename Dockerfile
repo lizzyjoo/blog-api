@@ -28,4 +28,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["node", "-e", "console.log('NODE WORKS'); require('./app.js')"]
+CMD ["node", "-e", "console.log('HELLO FROM NODE')"]
