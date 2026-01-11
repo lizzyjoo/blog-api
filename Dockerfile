@@ -28,5 +28,5 @@ COPY . .
 
 EXPOSE 3000
 
-# Run migrations and start
-CMD npx prisma migrate deploy && node app.js
+# Run migrations then start
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
