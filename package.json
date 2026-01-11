@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node app.js",
-    "start": "nodemon app.js",
+    "dev": "nodemon app.js",
+    "build": "npx prisma generate && npx prisma migrate deploy",
+    "start": "node app.js",
     "seed": "node prisma/seed.js"
   },
   "prisma": {
