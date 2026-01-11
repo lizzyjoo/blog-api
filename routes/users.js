@@ -127,9 +127,7 @@ router.get("/:username/profile", optionalAuth, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const postFilter = isOwnProfile
-      ? { trashedAt: null }
-      : { published: true, hidden: false, trashedAt: null };
+    const postFilter = { published: true, hidden: false, trashedAt: null };
 
     const user = await prisma.user.findUnique({
       where: { username },
