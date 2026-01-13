@@ -60,6 +60,9 @@ router.post("/register", async (req, res) => {
         registeredDate,
       },
     });
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = newUser;
     res
       .status(201)
       .json({ message: "User registered successfully", user: newUser });
